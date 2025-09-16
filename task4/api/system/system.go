@@ -1,7 +1,10 @@
 package system
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/yhcui/web3study/task4/global"
 	"github.com/yhcui/web3study/task4/model"
 	"github.com/yhcui/web3study/task4/model/response"
@@ -54,8 +57,32 @@ func Login(c *gin.Context) {
 		response.FailWithMsg("用户密码错误", c)
 		return
 	}
-	// 生成JWT
-	c.JSON(200, gin.H{
-		"message": "LOGIN",
-	})
+
+	token, err := GenerateToken(userdb.ID, userdb.Name)
+	if err != nil {
+		response.FailWithMsg(err.Error(), c)
+		return
+	}
+	response.OkWithData(gin.H{"token": token}, c)
+
+}
+
+type JwtCustomClaims struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+	jwt.RegisteredClaims
+}
+
+func GenerateToken(id uint, name string) (string, error) {
+	claims := JwtCustomClaims{
+		ID:   id,
+		Name: name,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(72 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Subject:   "Token",
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte("$#@$#54$2qrweqrew"))
 }
