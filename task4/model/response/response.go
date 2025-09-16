@@ -37,3 +37,7 @@ func OkWithData(data interface{}, c *gin.Context) {
 func Fail(c *gin.Context) {
 	Result(ERROR, map[string]interface{}{}, "操作失败", c)
 }
+
+func FailWithMsg(msg string, c *gin.Context) {
+	Result(ERROR, map[string]interface{}{}, msg, c)
+}

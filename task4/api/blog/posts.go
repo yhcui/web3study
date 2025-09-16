@@ -59,19 +59,29 @@ func UpdateBlog(c *gin.Context) {
 }
 
 func DeleteBlog(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "list",
-	})
+	id, _ := c.GetPostFormMap("id")
+	global.SDB.Delete(&model.Posts{}, id)
+	response.OkWithMessage("删除成功", c)
 }
 
 func CommentCreate(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "list",
-	})
+	comment := model.Comments{}
+	err := c.ShouldBind(&comment)
+	if err != nil {
+		response.Fail(c)
+	} else {
+		tx := global.SDB.Create(&comment)
+		if tx.RowsAffected > 0 {
+			response.Ok(c)
+		} else {
+			response.Fail(c)
+		}
+	}
 }
 
 func ListCommentByPostId(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "list",
-	})
+	postId, _ := c.GetQuery("postid")
+	comments := []model.Comments{}
+	global.SDB.Where("post_id = ?", postId).Find(&comments)
+	response.OkWithData(comments, c)
 }
