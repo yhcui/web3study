@@ -5,7 +5,14 @@ import (
 	"github.com/yhcui/web3study/task4/global"
 	"github.com/yhcui/web3study/task4/model"
 	"github.com/yhcui/web3study/task4/model/response"
+	"golang.org/x/crypto/bcrypt"
 )
+
+//const (
+//	MinCost     int = 4
+//	MaxCost     int = 31
+//	DefaultCost int = 10
+//)
 
 func Register(c *gin.Context) {
 	user := model.User{}
@@ -22,10 +29,10 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	password, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	user.Password = string(password)
 	global.SDB.Create(&user)
-	c.JSON(200, gin.H{
-		"message": "REGISTER",
-	})
+	response.OkWithMessage("注册成功", c)
 }
 
 func Login(c *gin.Context) {
@@ -36,6 +43,18 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	userdb := model.User{}
+	global.SDB.Select("name = ?", user.Name).First(&userdb)
+	if userdb.ID == 0 {
+		response.FailWithMsg("没有该有户", c)
+		return
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(userdb.Password), []byte(user.Password))
+	if err != nil {
+		response.FailWithMsg("用户密码错误", c)
+		return
+	}
+	// 生成JWT
 	c.JSON(200, gin.H{
 		"message": "LOGIN",
 	})
