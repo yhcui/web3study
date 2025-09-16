@@ -26,7 +26,7 @@ func Register(c *gin.Context) {
 	}
 
 	users := []model.User{}
-	global.SDB.Select("name = ?", user.Name).Find(&users)
+	global.SDB.Where("name = ?", user.Name).Find(&users)
 	if len(users) > 0 {
 		response.FailWithMsg("用户名已被注册", c)
 		return
@@ -47,7 +47,7 @@ func Login(c *gin.Context) {
 	}
 
 	userdb := model.User{}
-	global.SDB.Select("name = ?", user.Name).First(&userdb)
+	global.SDB.Where("name = ?", user.Name).First(&userdb)
 	if userdb.ID == 0 {
 		response.FailWithMsg("没有该有户", c)
 		return

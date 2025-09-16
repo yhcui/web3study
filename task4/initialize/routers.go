@@ -70,9 +70,16 @@ func JWTAuth() gin.HandlerFunc {
 			return "$#@$#54$2qrweqrew", nil
 		})
 
-		c.Set("userID", jwtCustomClaims.ID)
-		c.Set("name", jwtCustomClaims.Name)
-		c.Next()
+		if jwtCustomClaims.ID > 0 {
+			c.Set("userID", jwtCustomClaims.ID)
+			c.Set("name", jwtCustomClaims.Name)
+			c.Next()
+		} else {
+			response.FailWithMsg("invalid token", c)
+			c.Abort()
+
+		}
+
 	}
 }
 

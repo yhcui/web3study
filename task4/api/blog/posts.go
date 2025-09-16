@@ -11,6 +11,8 @@ import (
 
 func CreateBlog(c *gin.Context) {
 	post := model.Posts{}
+	value, _ := c.Get("userID")
+	post.UserId = value.(uint)
 	if err := c.ShouldBind(&post); err == nil {
 		tx := global.SDB.Create(&post)
 		if tx.RowsAffected > 0 {
