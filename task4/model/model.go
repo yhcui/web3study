@@ -22,6 +22,6 @@ type Comments struct {
 	Content string
 	UserId  uint
 	User    User
-	PostId  uint
+	PostsId uint
 	Posts   Posts
 }

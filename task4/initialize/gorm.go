@@ -14,6 +14,8 @@ func GROM() *gorm.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
+	//db.AutoMigrate(&model.User{})
+	//db.AutoMigrate(&model.User{}, &model.Posts{})
 	db.AutoMigrate(&model.User{}, &model.Posts{}, &model.Comments{})
 	return db
 }

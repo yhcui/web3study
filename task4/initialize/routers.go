@@ -1,10 +1,8 @@
 package initialize
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -16,10 +14,10 @@ import (
 	"github.com/yhcui/web3study/task4/model/response"
 )
 
-func Routes() *gin.Engine {
-
+func Routers() *gin.Engine {
 	router := gin.Default()
 	router.Use(ErrorHandler(), LoggerMiddleware())
+
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "hello world",
@@ -27,6 +25,7 @@ func Routes() *gin.Engine {
 	})
 
 	sysRouter := router.Group("system").Use(ErrorHandler(), LoggerMiddleware())
+
 	{
 		sysRouter.POST("/register", system.Register)
 		sysRouter.POST("/login", system.Login)
@@ -46,6 +45,15 @@ func Routes() *gin.Engine {
 
 	return router
 }
+func ErrorHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 {
+			err := c.Errors.Last().Err
+			response.FailWithMsg(err.Error(), c)
+		}
+	}
+}
 
 func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -57,30 +65,14 @@ func JWTAuth() gin.HandlerFunc {
 		}
 		tokenString := strings.TrimPrefix(auth, "Bearer ")
 
-		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(os.Getenv("JWT_SECRET")), nil
+		jwtCustomClaims := system.JwtCustomClaims{}
+		jwt.ParseWithClaims(tokenString, &jwtCustomClaims, func(token *jwt.Token) (interface{}, error) {
+			return "$#@$#54$2qrweqrew", nil
 		})
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			c.Set("userID", claims["userID"])
-			c.Set("roles", claims["roles"])
-			c.Next()
-		} else {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-		}
-	}
-}
-
-func ErrorHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
+		c.Set("userID", jwtCustomClaims.ID)
+		c.Set("name", jwtCustomClaims.Name)
 		c.Next()
-		if len(c.Errors) > 0 {
-			err := c.Errors.Last().Err
-			response.FailWithMsg(err.Error(), c)
-		}
 	}
 }
 

@@ -8,7 +8,8 @@ import (
 func main() {
 	global.Logger = initialize.InitLogger()
 	global.SDB = initialize.GROM()
-	router := initialize.Routes()
+	router := initialize.Routers()
+
 	global.Logger.Info("服务准备启动")
 	router.Run(":8080")
 
