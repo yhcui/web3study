@@ -39,7 +39,7 @@ func Routers() *gin.Engine {
 		blogRouter.POST("/blog/update", blog.UpdateBlog)
 		blogRouter.POST("/blog/delete", blog.DeleteBlog)
 		blogRouter.POST("/comment/create", blog.CommentCreate)
-		blogRouter.POST("/comment/listbypostid", blog.ListCommentByPostId)
+		blogRouter.GET("/comment/listbypostid", blog.ListCommentByPostId)
 
 	}
 
@@ -50,6 +50,8 @@ func ErrorHandler() gin.HandlerFunc {
 		c.Next()
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last().Err
+			global.Logger.Info("error log",
+				slog.String("err", err.Error()))
 			response.FailWithMsg(err.Error(), c)
 		}
 	}
@@ -57,6 +59,16 @@ func ErrorHandler() gin.HandlerFunc {
 
 func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ignoreUrl := []string{"/blog/blog/list", "/blog/blog/detail", "/blog/comment/listbypostid"}
+		path := c.Request.URL.Path
+		slog.Info("url", slog.String("path", path))
+		for _, s := range ignoreUrl {
+			if s == path {
+				c.Next()
+				return
+			}
+		}
+
 		auth := c.GetHeader("Authorization")
 
 		if strings.TrimSpace(auth) == "" {

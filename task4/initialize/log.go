@@ -12,5 +12,6 @@ func InitLogger() (log *slog.Logger) {
 		AddSource: true,
 		Level:     slog.LevelDebug,
 	}))
+	slog.SetDefault(Logger)
 	return Logger
 }

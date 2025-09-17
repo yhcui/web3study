@@ -2,6 +2,7 @@ package blog
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yhcui/web3study/task4/global"
@@ -48,6 +49,20 @@ func UpdateBlog(c *gin.Context) {
 	if err != nil {
 		response.Fail(c)
 	} else {
+		qpost := model.Posts{}
+		global.SDB.Where("id = ?", post.ID).First(&qpost)
+
+		value, _ := c.Get("userID")
+		userId := value.(uint)
+
+		if qpost.UserId != userId {
+			response.FailWithMsg("不是你的，你不能改", c)
+			return
+		}
+		post.Title = qpost.Title
+		post.Content = qpost.Content
+		post.UpdatedAt = time.Now()
+		post.UserId = userId
 		tx := global.SDB.Model(&post).Updates(post)
 		if tx.RowsAffected > 0 {
 			response.Ok(c)
@@ -55,23 +70,38 @@ func UpdateBlog(c *gin.Context) {
 			response.Fail(c)
 		}
 	}
-	c.JSON(200, gin.H{
-		"message": "list",
-	})
 }
 
 func DeleteBlog(c *gin.Context) {
-	id, _ := c.GetPostFormMap("id")
+	//id, _ := c.GetPostFormMap("id")
+	id, _ := c.GetPostForm("id")
+
+	qpost := model.Posts{}
+	global.SDB.Where("id = ?", id).First(&qpost)
+
+	value, _ := c.Get("userID")
+	userId := value.(uint)
+
+	if qpost.UserId != userId {
+		response.FailWithMsg("不是你的，你不能改", c)
+		return
+	}
+
 	global.SDB.Delete(&model.Posts{}, id)
 	response.OkWithMessage("删除成功", c)
 }
 
 func CommentCreate(c *gin.Context) {
+
+	value, _ := c.Get("userID")
+	userId := value.(uint)
+
 	comment := model.Comments{}
 	err := c.ShouldBind(&comment)
 	if err != nil {
 		response.Fail(c)
 	} else {
+		comment.UserId = userId
 		tx := global.SDB.Create(&comment)
 		if tx.RowsAffected > 0 {
 			response.Ok(c)
@@ -84,6 +114,6 @@ func CommentCreate(c *gin.Context) {
 func ListCommentByPostId(c *gin.Context) {
 	postId, _ := c.GetQuery("postid")
 	comments := []model.Comments{}
-	global.SDB.Where("post_id = ?", postId).Find(&comments)
+	global.SDB.Where("posts_id = ?", postId).Find(&comments)
 	response.OkWithData(comments, c)
 }

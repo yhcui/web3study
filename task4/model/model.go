@@ -22,6 +22,6 @@ type Comments struct {
 	Content string
 	UserId  uint
 	User    User
-	PostsId uint
+	PostsId uint `json:"posts_id"`
 	Posts   Posts
 }
